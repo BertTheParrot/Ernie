@@ -278,48 +278,117 @@ class SpriteManager:
             pygame.image.save(sprite, path)
     
     def _create_player_sprite(self, direction: str) -> pygame.Surface:
-        """Create a detailed player character sprite"""
+        """Create a detailed Australian Shepherd dog sprite for Ernie"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
         sprite.fill((34, 139, 34))  # Grass background
         
-        # Character body (blue shirt)
-        body_color = (65, 105, 225)
-        head_color = (255, 220, 177)  # Skin tone
+        # Australian Shepherd colors (blue merle pattern)
+        base_coat = (105, 105, 105)      # Gray base
+        dark_patches = (64, 64, 64)      # Dark gray patches  
+        light_patches = (192, 192, 192)  # Light gray patches
+        white_markings = (255, 255, 255) # White markings
+        black_features = (0, 0, 0)       # Black nose, eyes
+        pink_tongue = (255, 192, 203)    # Pink tongue/mouth
         
-        # Head
-        pygame.draw.circle(sprite, head_color, (16, 10), 6)
+        # Draw dog body (horizontal oval, longer than tall)
+        if direction in ['left', 'right']:
+            # Side view - show full profile
+            body_rect = (6, 14, 20, 10)
+            pygame.draw.ellipse(sprite, base_coat, body_rect)
+            
+            # Add merle pattern patches on body
+            pygame.draw.ellipse(sprite, dark_patches, (8, 15, 6, 4))
+            pygame.draw.ellipse(sprite, light_patches, (16, 16, 5, 3))
+            pygame.draw.ellipse(sprite, dark_patches, (12, 20, 4, 3))
+            
+            # Head position based on direction
+            if direction == 'left':
+                head_center = (8, 12)
+                nose_pos = (4, 12)
+                ear_points = [(10, 8), (12, 6), (8, 10)]
+                tail_points = [(24, 16), (28, 12), (26, 20)]
+            else:  # right
+                head_center = (24, 12)
+                nose_pos = (28, 12)
+                ear_points = [(22, 8), (20, 6), (24, 10)]
+                tail_points = [(8, 16), (4, 12), (6, 20)]
+                
+        else:
+            # Front/back view - more compact
+            body_rect = (10, 16, 12, 12)
+            pygame.draw.ellipse(sprite, base_coat, body_rect)
+            
+            # Add merle patches
+            pygame.draw.ellipse(sprite, dark_patches, (11, 17, 4, 3))
+            pygame.draw.ellipse(sprite, light_patches, (17, 19, 3, 3))
+            
+            head_center = (16, 10)
+            nose_pos = (16, 8) if direction == 'up' else (16, 12)
+            # Ears on both sides for front/back view
+            ear_points = [(12, 6), (14, 4), (10, 8)]  # Left ear
+            tail_points = [(16, 26), (14, 30), (18, 30)]  # Tail down
         
-        # Body
-        pygame.draw.rect(sprite, body_color, (11, 14, 10, 12))
+        # Draw head (circular)
+        pygame.draw.circle(sprite, base_coat, head_center, 6)
         
-        # Arms
-        pygame.draw.rect(sprite, body_color, (8, 16, 4, 8))
-        pygame.draw.rect(sprite, body_color, (20, 16, 4, 8))
+        # Add white markings on face (common in Aussies)
+        if direction in ['up', 'down']:
+            # White blaze down center of face
+            pygame.draw.ellipse(sprite, white_markings, (head_center[0]-1, head_center[1]-3, 2, 6))
         
-        # Legs (brown pants)
-        leg_color = (101, 67, 33)
-        pygame.draw.rect(sprite, leg_color, (12, 26, 3, 6))
-        pygame.draw.rect(sprite, leg_color, (17, 26, 3, 6))
+        # Add merle patches on head
+        patch_offset = (-2, -1) if direction == 'left' else (1, -1) if direction == 'right' else (2, -2)
+        pygame.draw.circle(sprite, dark_patches, (head_center[0] + patch_offset[0], head_center[1] + patch_offset[1]), 2)
         
-        # Eyes (black dots)
+        # Draw ears (floppy, typical of Aussies)
+        pygame.draw.polygon(sprite, dark_patches, ear_points)
+        if direction in ['up', 'down']:
+            # Second ear for front/back view
+            right_ear = [(20, 6), (18, 4), (22, 8)]
+            pygame.draw.polygon(sprite, dark_patches, right_ear)
+        
+        # Draw nose (black)
+        pygame.draw.circle(sprite, black_features, nose_pos, 1)
+        
+        # Draw eyes
         if direction == 'left':
-            pygame.draw.circle(sprite, (0, 0, 0), (13, 9), 1)
+            pygame.draw.circle(sprite, black_features, (6, 10), 1)
         elif direction == 'right':
-            pygame.draw.circle(sprite, (0, 0, 0), (19, 9), 1)
-        else:  # up/down
-            pygame.draw.circle(sprite, (0, 0, 0), (14, 9), 1)
-            pygame.draw.circle(sprite, (0, 0, 0), (18, 9), 1)
+            pygame.draw.circle(sprite, black_features, (26, 10), 1)
+        else:  # front/back view
+            # Two eyes
+            pygame.draw.circle(sprite, black_features, (14, 9), 1)
+            pygame.draw.circle(sprite, black_features, (18, 9), 1)
         
-        # Directional indicator (hat/hair)
-        hat_color = (139, 69, 19)
-        if direction == 'up':
-            pygame.draw.rect(sprite, hat_color, (13, 4, 6, 3))
-        elif direction == 'down':
-            pygame.draw.rect(sprite, hat_color, (13, 6, 6, 3))
-        elif direction == 'left':
-            pygame.draw.rect(sprite, hat_color, (10, 5, 6, 3))
+        # Draw legs (four legs visible in side view, two in front/back)
+        leg_color = base_coat
+        if direction in ['left', 'right']:
+            # Four legs in side view
+            pygame.draw.rect(sprite, leg_color, (10, 24, 2, 6))  # Front leg
+            pygame.draw.rect(sprite, leg_color, (14, 24, 2, 6))  # Front leg 2
+            pygame.draw.rect(sprite, leg_color, (18, 24, 2, 6))  # Back leg 1
+            pygame.draw.rect(sprite, leg_color, (22, 24, 2, 6))  # Back leg 2
+            
+            # White socks (common marking)
+            pygame.draw.rect(sprite, white_markings, (10, 28, 2, 2))
+            pygame.draw.rect(sprite, white_markings, (22, 28, 2, 2))
+        else:
+            # Two legs visible in front/back view
+            pygame.draw.rect(sprite, leg_color, (13, 26, 2, 6))
+            pygame.draw.rect(sprite, leg_color, (17, 26, 2, 6))
+            # White socks
+            pygame.draw.rect(sprite, white_markings, (13, 30, 2, 2))
+            pygame.draw.rect(sprite, white_markings, (17, 30, 2, 2))
+        
+        # Draw fluffy tail (Australian Shepherds have very fluffy tails)
+        pygame.draw.polygon(sprite, base_coat, tail_points)
+        # Add fluff texture to tail
+        if direction == 'left':
+            pygame.draw.circle(sprite, light_patches, (26, 14), 2)
         elif direction == 'right':
-            pygame.draw.rect(sprite, hat_color, (16, 5, 6, 3))
+            pygame.draw.circle(sprite, light_patches, (6, 14), 2)
+        else:
+            pygame.draw.circle(sprite, light_patches, (16, 28), 2)
             
         return sprite
     
