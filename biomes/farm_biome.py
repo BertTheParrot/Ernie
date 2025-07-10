@@ -29,16 +29,23 @@ def create_farming_section(world: List[List[str]], WORLD_WIDTH: int, WORLD_HEIGH
             if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
                 world[y][x] = '.'  # Clear grass
     
-    # Farm buildings - houses for villagers
-    farm_buildings = [(19, 19), (21, 19), (19, 22)]
-    for hx, hy in farm_buildings:
-        if 0 < hx < WORLD_WIDTH-1 and 0 < hy < WORLD_HEIGHT-1:
-            world[hy][hx] = 'H'  # House
+    # Farm buildings - BIG houses for villagers (5x5 each)
+    # Repositioned to avoid overlaps
+    farm_houses = [(12, 12), (26, 12), (12, 26)]  # Well spaced apart
+    for hx, hy in farm_houses:
+        # Create 5x5 house
+        for house_y in range(hy, hy + 5):
+            for house_x in range(hx, hx + 5):
+                if 0 < house_x < WORLD_WIDTH-1 and 0 < house_y < WORLD_HEIGHT-1:
+                    world[house_y][house_x] = 'H'  # House
     
-    # Large barn for storing crops
-    world[21][22] = 'B'  # Barn
+    # Large barn for storing crops (also make it bigger - 3x3)
+    for barn_y in range(22, 25):
+        for barn_x in range(22, 25):
+            if 0 < barn_x < WORLD_WIDTH-1 and 0 < barn_y < WORLD_HEIGHT-1:
+                world[barn_y][barn_x] = 'B'  # Barn
     
-    # Village well - source of water
+    # Village well - source of water (keep original position)
     world[20][20] = 'O'  # Well
     
     # Animal pastures - clear grass areas for animals to roam
@@ -67,14 +74,15 @@ def get_farm_npcs():
     # Farmer Joe - main farmer character
     farmer_joe = {
         'name': 'Farmer Joe',
-        'x': 20, 'y': 20,  # Near the well
+        'x': 14, 'y': 14,  # At the first big house
         'dialogue': [
             "Hello there, young adventurer!",
             "Welcome to our little village.",
             "I've been farming these lands for 30 years.",
             "The path east leads to other settlements.",
             "Be careful of the mountains to the east!",
-            "These crops will feed the whole region."
+            "These crops will feed the whole region.",
+            "Our houses are much bigger now - plenty of room for visitors!"
         ]
     }
     npcs.append(farmer_joe)
@@ -82,13 +90,14 @@ def get_farm_npcs():
     # Village Elder - wise leader
     village_elder = {
         'name': 'Village Elder',
-        'x': 21, 'y': 22,  # Near the barn
+        'x': 28, 'y': 14,  # At the second big house
         'dialogue': [
             "Greetings, traveler!",
             "This village has stood here for generations.",
             "The old ruins to the south hold many secrets.",
             "Follow the main road to reach other towns.",
-            "Our harvest this year has been bountiful!"
+            "Our harvest this year has been bountiful!",
+            "These grand houses show our village's prosperity!"
         ]
     }
     npcs.append(village_elder)

@@ -47,7 +47,7 @@ class SpriteManager:
             "tile_water": self._create_colored_sprite((65, 105, 225)),     # Blue
             "tile_mountain": self._create_colored_sprite((128, 128, 128)), # Gray
             "tile_path": self._create_colored_sprite((238, 203, 173)),     # Sandy
-            "tile_house": self._create_colored_sprite((139, 69, 19)),      # Brown
+            "tile_house": self._create_house_sprite(),                     # Custom house sprite
             "tile_rock": self._create_colored_sprite((192, 192, 192)),     # Light gray
             "tile_stone": self._create_colored_sprite((64, 64, 64)),       # Dark gray
             "tile_crops": self._create_colored_sprite((255, 255, 0)),      # Yellow
@@ -157,8 +157,8 @@ class SpriteManager:
         """Get animal sprite by type"""
         return self.load_sprite(SpriteType.ANIMAL, f"animal_{animal_type}")
     
-    def get_tile_sprite(self, tile_char: str) -> pygame.Surface:
-        """Get tile sprite based on tile character"""
+    def get_tile_sprite(self, tile_char: str, size: int = None) -> pygame.Surface:
+        """Get tile sprite based on tile character, optionally scaled"""
         tile_mapping = {
             '#': 'wall',
             'T': 'tree', 
@@ -179,7 +179,18 @@ class SpriteManager:
         }
         
         tile_name = tile_mapping.get(tile_char, 'grass')
-        return self.load_sprite(SpriteType.TILE, f"tile_{tile_name}")
+        
+        # Special handling for large houses - use dedicated large house sprite
+        if tile_char == 'H' and size and size > self.tile_size:
+            return self._create_large_house_sprite(size)
+        
+        sprite = self.load_sprite(SpriteType.TILE, f"tile_{tile_name}")
+        
+        # If custom size specified, scale the sprite
+        if size and size != self.tile_size:
+            sprite = pygame.transform.scale(sprite, (size, size))
+            
+        return sprite
     
     def preload_common_sprites(self) -> None:
         """Preload commonly used sprites for better performance"""
@@ -545,6 +556,94 @@ class SpriteManager:
         
         # Chimney (dark gray)
         pygame.draw.rect(sprite, (105, 105, 105), (22, 6, 4, 8))
+        
+        return sprite
+    
+    def _create_large_house_sprite(self, size: int) -> pygame.Surface:
+        """Create a detailed large house sprite for 5x5 tile houses"""
+        sprite = pygame.Surface((size, size))
+        sprite.fill((34, 139, 34))  # Grass background
+        
+        # Scale factors for the larger house
+        scale = size // 32  # How many times larger than a single tile
+        
+        # House walls (light brown/tan) - bigger and more detailed
+        wall_color = (210, 180, 140)
+        wall_rect = (size//8, int(size//2.5), size*3//4, int(size//2.5))
+        pygame.draw.rect(sprite, wall_color, wall_rect)
+        
+        # Roof (dark red, triangular) - much larger and more prominent
+        roof_color = (139, 69, 19)
+        roof_points = [(size//10, int(size//2.5)), (size//2, size//8), (size*9//10, int(size//2.5))]
+        pygame.draw.polygon(sprite, roof_color, roof_points)
+        
+        # Front door (dark brown) - bigger and more detailed
+        door_color = (101, 67, 33)
+        door_width = size//8
+        door_height = size//4
+        door_x = size//2 - door_width//2
+        door_y = size*3//4 - door_height
+        door_rect = (door_x, door_y, door_width, door_height)
+        pygame.draw.rect(sprite, door_color, door_rect)
+        
+        # Door handle (yellow) - bigger
+        handle_size = max(2, size//32)
+        pygame.draw.circle(sprite, (255, 215, 0), (door_x + door_width*3//4, door_y + door_height//2), handle_size)
+        
+        # Windows (light blue with white frames) - multiple windows for larger house
+        window_frame = (255, 255, 255)
+        window_glass = (173, 216, 230)
+        window_size = size//8
+        
+        # Left side windows
+        left_window_x = size//4
+        window_y = size//2
+        pygame.draw.rect(sprite, window_frame, (left_window_x, window_y, window_size, window_size))
+        pygame.draw.rect(sprite, window_glass, (left_window_x + 2, window_y + 2, window_size - 4, window_size - 4))
+        
+        # Right side windows
+        right_window_x = size*3//4 - window_size
+        pygame.draw.rect(sprite, window_frame, (right_window_x, window_y, window_size, window_size))
+        pygame.draw.rect(sprite, window_glass, (right_window_x + 2, window_y + 2, window_size - 4, window_size - 4))
+        
+        # Upper windows (in the roof area)
+        upper_window_size = size//12
+        upper_y = size//3
+        
+        # Left upper window
+        pygame.draw.rect(sprite, window_frame, (size//3, upper_y, upper_window_size, upper_window_size))
+        pygame.draw.rect(sprite, window_glass, (size//3 + 1, upper_y + 1, upper_window_size - 2, upper_window_size - 2))
+        
+        # Right upper window
+        pygame.draw.rect(sprite, window_frame, (size*2//3, upper_y, upper_window_size, upper_window_size))
+        pygame.draw.rect(sprite, window_glass, (size*2//3 + 1, upper_y + 1, upper_window_size - 2, upper_window_size - 2))
+        
+        # Chimney (dark gray) - bigger and more detailed
+        chimney_width = size//8
+        chimney_height = size//4
+        chimney_x = size*3//4
+        chimney_y = size//6
+        pygame.draw.rect(sprite, (105, 105, 105), (chimney_x, chimney_y, chimney_width, chimney_height))
+        
+        # Chimney smoke (light gray)
+        smoke_color = (200, 200, 200)
+        for i in range(3):
+            smoke_x = chimney_x + chimney_width//2 + (i * 2)
+            smoke_y = chimney_y - (i * 4)
+            pygame.draw.circle(sprite, smoke_color, (smoke_x, smoke_y), max(1, i + 1))
+        
+        # Add some decorative elements for the large house
+        # Shutters on windows
+        shutter_color = (139, 69, 19)  # Same as roof
+        shutter_width = size//32
+        
+        # Left window shutters
+        pygame.draw.rect(sprite, shutter_color, (left_window_x - shutter_width, window_y, shutter_width, window_size))
+        pygame.draw.rect(sprite, shutter_color, (left_window_x + window_size, window_y, shutter_width, window_size))
+        
+        # Right window shutters
+        pygame.draw.rect(sprite, shutter_color, (right_window_x - shutter_width, window_y, shutter_width, window_size))
+        pygame.draw.rect(sprite, shutter_color, (right_window_x + window_size, window_y, shutter_width, window_size))
         
         return sprite
     

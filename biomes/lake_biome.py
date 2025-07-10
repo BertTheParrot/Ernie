@@ -30,8 +30,12 @@ def create_lake_section(world: List[List[str]], WORLD_WIDTH: int, WORLD_HEIGHT: 
     world[28][75] = 'D'  # Dock
     world[29][75] = 'D'  # Dock
     
-    # Fisherman's shack - cozy home by the water
-    world[30][73] = 'H'  # House
+    # Fisherman's shack - BIG cozy home by the water (5x5)
+    shack_x, shack_y = 70, 30
+    for house_y in range(shack_y, shack_y + 5):
+        for house_x in range(shack_x, shack_x + 5):
+            if 0 < house_x < WORLD_WIDTH-1 and 0 < house_y < WORLD_HEIGHT-1:
+                world[house_y][house_x] = 'H'  # House
 
 def get_lake_npcs():
     """Return NPCs specific to the lake area"""
@@ -40,14 +44,15 @@ def get_lake_npcs():
     # Old Fisherman - peaceful lake dweller
     fisherman = {
         'name': 'Old Fisherman',
-        'x': 75, 'y': 28,  # On the dock
+        'x': 72, 'y': 32,  # At the big fisherman's shack
         'dialogue': [
             "Perfect fishing weather today!",
             "These waters are teeming with fish.",
             "I've caught strange things in the deep parts...",
             "The lake connects to underground rivers.",
             "Sometimes I see lights under the water at night.",
-            "This lake has the clearest water in all the land."
+            "This lake has the clearest water in all the land.",
+            "My new big shack has room for all my fishing gear!"
         ]
     }
     npcs.append(fisherman)

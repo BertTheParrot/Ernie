@@ -25,14 +25,18 @@ def create_forest_section(world: List[List[str]], WORLD_WIDTH: int, WORLD_HEIGHT
                 elif random.random() < 0.2:  # Some areas very dense
                     world[y][x] = 'F'  # Dense forest
     
-    # Forest clearing for hermit - peaceful open area
-    for y in range(13, 18):
-        for x in range(13, 18):
+    # Forest clearing for hermit - peaceful open area (bigger for 5x5 house)
+    for y in range(10, 20):
+        for x in range(10, 20):
             if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
                 world[y][x] = '.'  # Clear grass
     
-    # Hermit's hut - simple dwelling in the woods
-    world[15][15] = 'H'  # House
+    # Hermit's hut - BIG dwelling in the woods (5x5)
+    hut_x, hut_y = 12, 12  # Positioned in clearing
+    for house_y in range(hut_y, hut_y + 5):
+        for house_x in range(hut_x, hut_x + 5):
+            if 0 < house_x < WORLD_WIDTH-1 and 0 < house_y < WORLD_HEIGHT-1:
+                world[house_y][house_x] = 'H'  # House
 
 def get_forest_npcs():
     """Return NPCs specific to the forest area"""
@@ -41,14 +45,15 @@ def get_forest_npcs():
     # Forest Hermit - wise woods dweller
     hermit = {
         'name': 'Forest Hermit',
-        'x': 15, 'y': 15,  # In the clearing
+        'x': 14, 'y': 14,  # At the big hermit's hut
         'dialogue': [
             "Oh! A visitor in my peaceful forest!",
             "I've lived among these trees for decades.",
             "The forest spirits whisper of ancient magic.",
             "Beware the deeper parts of the woods...",
             "Nature has many secrets to share.",
-            "The trees remember stories from long ago."
+            "The trees remember stories from long ago.",
+            "My hut has grown with the forest's magic!"
         ]
     }
     npcs.append(hermit)

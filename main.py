@@ -37,6 +37,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 TILE_SIZE = 32
 PLAYER_SIZE = 48  # Make Ernie 1.5x larger than tiles!
+HOUSE_SIZE = 5  # Houses are now 5x5 tiles!
 PLAYER_SPEED = 4
 
 # World size - much larger now!
@@ -452,6 +453,28 @@ class Game:
         self.camera_x = max(0, min(self.camera_x, WORLD_WIDTH * TILE_SIZE - SCREEN_WIDTH))
         self.camera_y = max(0, min(self.camera_y, WORLD_HEIGHT * TILE_SIZE - SCREEN_HEIGHT))
         
+    def _find_house_top_left(self, x: int, y: int) -> tuple:
+        """Find the top-left corner of the 5x5 house that contains this tile"""
+        # Check a 5x5 area around this tile to find the house boundaries
+        for check_y in range(max(0, y - 4), min(WORLD_HEIGHT - 4, y + 1)):
+            for check_x in range(max(0, x - 4), min(WORLD_WIDTH - 4, x + 1)):
+                # Check if this could be a top-left corner of a 5x5 house
+                if self._is_complete_house_at(check_x, check_y):
+                    return (check_x, check_y)
+        return None
+    
+    def _is_complete_house_at(self, x: int, y: int) -> bool:
+        """Check if there's a complete 5x5 house starting at this position"""
+        if x + HOUSE_SIZE > WORLD_WIDTH or y + HOUSE_SIZE > WORLD_HEIGHT:
+            return False
+            
+        # Check if all tiles in 5x5 area are house tiles
+        for house_y in range(y, y + HOUSE_SIZE):
+            for house_x in range(x, x + HOUSE_SIZE):
+                if self.world_map[house_y][house_x] != 'H':
+                    return False
+        return True
+    
     def draw_world(self) -> None:
         """Draw the world map with all new tile types"""
         start_x = max(0, self.camera_x // TILE_SIZE - 1)
@@ -459,17 +482,48 @@ class Game:
         start_y = max(0, self.camera_y // TILE_SIZE - 1)
         end_y = min(WORLD_HEIGHT, (self.camera_y + SCREEN_HEIGHT) // TILE_SIZE + 2)
         
+        # Keep track of which house tiles we've already drawn as part of large houses
+        drawn_house_tiles = set()
+        
         for y in range(start_y, end_y):
             for x in range(start_x, end_x):
                 tile = self.world_map[y][x]
                 screen_x = x * TILE_SIZE - self.camera_x
                 screen_y = y * TILE_SIZE - self.camera_y
                 
-                # Get the appropriate sprite for this tile
-                tile_sprite = self.sprite_manager.get_tile_sprite(tile)
-                
-                # Draw the tile sprite
-                self.screen.blit(tile_sprite, (screen_x, screen_y))
+                # Special handling for houses - draw as large 5x5 sprites
+                if tile == 'H':
+                    # Skip if this tile is already part of a drawn house
+                    if (x, y) in drawn_house_tiles:
+                        continue
+                        
+                    # Find the top-left corner of the house this tile belongs to
+                    house_top_left = self._find_house_top_left(x, y)
+                    
+                    if house_top_left:
+                        house_x, house_y = house_top_left
+                        # Draw a large house sprite (5x5 tiles = 160x160 pixels)
+                        large_house_sprite = self.sprite_manager.get_tile_sprite('H', HOUSE_SIZE * TILE_SIZE)
+                        house_screen_x = house_x * TILE_SIZE - self.camera_x
+                        house_screen_y = house_y * TILE_SIZE - self.camera_y
+                        self.screen.blit(large_house_sprite, (house_screen_x, house_screen_y))
+                        
+                        # Mark all tiles in this house as drawn
+                        for house_tile_y in range(house_y, house_y + HOUSE_SIZE):
+                            for house_tile_x in range(house_x, house_x + HOUSE_SIZE):
+                                drawn_house_tiles.add((house_tile_x, house_tile_y))
+                    else:
+                        # This is a single house tile or part of a broken house structure
+                        # Draw grass background first, then small house sprite
+                        grass_sprite = self.sprite_manager.get_tile_sprite('.')
+                        self.screen.blit(grass_sprite, (screen_x, screen_y))
+                        
+                        house_sprite = self.sprite_manager.get_tile_sprite('H')
+                        self.screen.blit(house_sprite, (screen_x, screen_y))
+                else:
+                    # Regular tile handling
+                    tile_sprite = self.sprite_manager.get_tile_sprite(tile)
+                    self.screen.blit(tile_sprite, (screen_x, screen_y))
                     
     def draw_ui(self) -> None:
         """Draw UI elements with spawn section info"""
