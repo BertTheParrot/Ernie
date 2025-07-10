@@ -28,7 +28,7 @@ class SpriteManager:
     def _create_fallback_sprites(self) -> None:
         """Create simple colored rectangle fallbacks for missing sprites"""
         self.fallback_sprites = {
-            # Player sprites
+            # Player sprites (larger than other sprites)
             "player_down": self._create_colored_sprite((65, 105, 225), (255, 255, 0)),  # Blue with yellow dot
             "player_up": self._create_colored_sprite((65, 105, 225), (255, 255, 0)),
             "player_left": self._create_colored_sprite((65, 105, 225), (255, 255, 0)),
@@ -68,9 +68,11 @@ class SpriteManager:
         }
     
     def _create_colored_sprite(self, color: Tuple[int, int, int], 
-                              accent_color: Optional[Tuple[int, int, int]] = None) -> pygame.Surface:
+                              accent_color: Optional[Tuple[int, int, int]] = None,
+                              size: int = None) -> pygame.Surface:
         """Create enhanced colored sprites with texture"""
-        sprite = pygame.Surface((self.tile_size, self.tile_size))
+        sprite_size = size or self.tile_size
+        sprite = pygame.Surface((sprite_size, sprite_size))
         
         # Add gradient effect for better visual appeal
         base_color = color
@@ -83,25 +85,26 @@ class SpriteManager:
         # Add simple texture based on color type
         if color == (34, 139, 34):  # Grass
             # Add grass texture
-            for i in range(0, self.tile_size, 4):
-                for j in range(0, self.tile_size, 4):
+            for i in range(0, sprite_size, 4):
+                for j in range(0, sprite_size, 4):
                     if (i + j) % 8 == 0:
                         pygame.draw.rect(sprite, highlight_color, (i, j, 2, 1))
         elif color == (65, 105, 225):  # Water
             # Add water ripples
-            for i in range(0, self.tile_size, 6):
-                pygame.draw.line(sprite, highlight_color, (0, i), (self.tile_size, i), 1)
+            for i in range(0, sprite_size, 6):
+                pygame.draw.line(sprite, highlight_color, (0, i), (sprite_size, i), 1)
         elif color == (128, 128, 128):  # Stone/Wall
             # Add stone texture
             for i in range(4):
-                x = (i * 8) % self.tile_size
-                y = (i * 6) % self.tile_size
+                x = (i * 8) % sprite_size
+                y = (i * 6) % sprite_size
                 pygame.draw.rect(sprite, shadow_color, (x, y, 3, 3))
         
         # Add accent dot if specified
         if accent_color:
-            center_x, center_y = self.tile_size // 2, self.tile_size // 2
-            pygame.draw.circle(sprite, accent_color, (center_x, center_y), 4)
+            center_x, center_y = sprite_size // 2, sprite_size // 2
+            radius = max(4, sprite_size // 8)  # Scale radius with sprite size
+            pygame.draw.circle(sprite, accent_color, (center_x, center_y), radius)
             
         return sprite
     
@@ -136,9 +139,15 @@ class SpriteManager:
         self.sprite_cache[cache_key] = fallback_sprite
         return fallback_sprite
     
-    def get_player_sprite(self, direction: str = "down") -> pygame.Surface:
-        """Get player sprite for specific direction"""
-        return self.load_sprite(SpriteType.PLAYER, f"player_{direction}")
+    def get_player_sprite(self, direction: str = "down", size: int = None) -> pygame.Surface:
+        """Get player sprite for specific direction, optionally scaled to custom size"""
+        sprite = self.load_sprite(SpriteType.PLAYER, f"player_{direction}")
+        
+        # If custom size specified, scale the sprite
+        if size and size != self.tile_size:
+            sprite = pygame.transform.scale(sprite, (size, size))
+            
+        return sprite
     
     def get_npc_sprite(self, npc_type: str = "default") -> pygame.Surface:
         """Get NPC sprite by type"""

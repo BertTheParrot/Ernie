@@ -33,6 +33,7 @@ pygame.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 TILE_SIZE = 32
+PLAYER_SIZE = 48  # Make Ernie 1.5x larger than tiles!
 PLAYER_SPEED = 4
 
 # World size - much larger now!
@@ -106,8 +107,8 @@ class Player:
     def __init__(self, x: int, y: int, sprite_manager: SpriteManager):
         self.x = x
         self.y = y
-        self.width = TILE_SIZE
-        self.height = TILE_SIZE
+        self.width = PLAYER_SIZE  # Ernie is bigger!
+        self.height = PLAYER_SIZE  # Ernie is bigger!
         self.speed = PLAYER_SPEED
         self.direction = 'down'
         self.is_moving = False
@@ -152,10 +153,10 @@ class Player:
         screen_x = self.x - camera_x
         screen_y = self.y - camera_y
         
-        # Get the appropriate sprite for current direction
-        player_sprite = self.sprite_manager.get_player_sprite(self.direction)
+        # Get the appropriate sprite for current direction (now larger!)
+        player_sprite = self.sprite_manager.get_player_sprite(self.direction, PLAYER_SIZE)
         
-        # Draw the player sprite
+        # Draw the larger player sprite
         screen.blit(player_sprite, (screen_x, screen_y))
 
 class NPC:
