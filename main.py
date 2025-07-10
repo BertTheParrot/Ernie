@@ -8,6 +8,9 @@ from typing import List, Dict, Tuple, Optional
 # Import sprite manager
 from sprite_manager import SpriteManager
 
+# Import animals
+from animals import FarmAnimals
+
 # Import biome modules for collaborative development
 from biomes import (
     create_farming_section, create_forest_section, create_lake_section,
@@ -227,6 +230,11 @@ class Game:
         # Create NPCs
         self.npcs = self.create_npcs()
         
+        # Create farm animals
+        self.farm_animals = FarmAnimals(self.sprite_manager)
+        if spawn_section == 'farm':  # Only add animals if spawning in farm
+            self.farm_animals.create_farm_animals()
+        
         # Camera
         self.camera_x = 0
         self.camera_y = 0
@@ -355,7 +363,8 @@ class Game:
             self.player.is_moving = False
             
     def check_interactions(self) -> None:
-        """Check for NPC interactions"""
+        """Check for NPC and animal interactions"""
+        # Check NPCs
         for npc in self.npcs:
             distance = math.sqrt((self.player.x - npc.x)**2 + (self.player.y - npc.y)**2)
             if distance < TILE_SIZE * 1.5:  # Close enough to interact
@@ -364,9 +373,19 @@ class Game:
                 prompt_surface = self.small_font.render(prompt_text, True, WHITE)
                 prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT - 50))
                 self.screen.blit(prompt_surface, prompt_rect)
+                return
+        
+        # Check animals if no NPC is nearby
+        animal_interaction = self.farm_animals.check_interactions(self.player.x, self.player.y, TILE_SIZE)
+        if animal_interaction:
+            prompt_text = f"Press SPACE to interact with {animal_interaction.split(':')[0]}"
+            prompt_surface = self.small_font.render(prompt_text, True, WHITE)
+            prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT - 50))
+            self.screen.blit(prompt_surface, prompt_rect)
                 
     def handle_interaction(self) -> None:
         """Handle space key interaction"""
+        # First check NPCs
         for npc in self.npcs:
             distance = math.sqrt((self.player.x - npc.x)**2 + (self.player.y - npc.y)**2)
             if distance < TILE_SIZE * 1.5:
@@ -377,7 +396,16 @@ class Game:
                     self.dialogue_text = npc.next_dialogue()
                     if not self.dialogue_text:
                         self.show_dialogue = False
-                break
+                return
+        
+        # Then check animals if no NPC was interacted with
+        animal_interaction = self.farm_animals.check_interactions(self.player.x, self.player.y, TILE_SIZE)
+        if animal_interaction:
+            if not self.show_dialogue:
+                self.dialogue_text = animal_interaction
+                self.show_dialogue = True
+            else:
+                self.show_dialogue = False
                 
     def update_camera(self) -> None:
         """Update camera to follow player"""
@@ -544,6 +572,9 @@ class Game:
             # Handle input
             self.handle_input()
             
+            # Update animals
+            self.farm_animals.update(self.world_map)
+            
             # Update camera
             self.update_camera()
             
@@ -552,6 +583,9 @@ class Game:
             
             # Draw world
             self.draw_world()
+            
+            # Draw animals
+            self.farm_animals.draw(self.screen, self.camera_x, self.camera_y)
             
             # Draw NPCs
             for npc in self.npcs:

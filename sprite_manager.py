@@ -8,6 +8,7 @@ class SpriteType(Enum):
     PLAYER = "player"
     NPC = "npcs" 
     TILE = "tiles"
+    ANIMAL = "animals"
 
 class SpriteManager:
     """Manages loading, caching, and accessing sprite images"""
@@ -56,6 +57,14 @@ class SpriteManager:
             "tile_cave": self._create_colored_sprite((0, 0, 0)),           # Black
             "tile_altar": self._create_colored_sprite((128, 0, 128)),      # Purple
             "tile_forest": self._create_colored_sprite((0, 100, 0)),       # Dark green
+            
+            # Animal sprites
+            "animal_cow": self._create_colored_sprite((0, 0, 0), (255, 255, 255)),        # Black with white spots
+            "animal_pig": self._create_colored_sprite((255, 192, 203)),                   # Pink
+            "animal_chicken": self._create_colored_sprite((255, 255, 255), (255, 140, 0)), # White with orange beak
+            "animal_sheep": self._create_colored_sprite((245, 245, 245)),                 # Off-white
+            "animal_horse": self._create_colored_sprite((139, 69, 19)),                   # Brown
+            "animal_goat": self._create_colored_sprite((255, 248, 220)),                  # Cream
         }
     
     def _create_colored_sprite(self, color: Tuple[int, int, int], 
@@ -113,6 +122,10 @@ class SpriteManager:
         """Get NPC sprite by type"""
         return self.load_sprite(SpriteType.NPC, f"npc_{npc_type}")
     
+    def get_animal_sprite(self, animal_type: str) -> pygame.Surface:
+        """Get animal sprite by type"""
+        return self.load_sprite(SpriteType.ANIMAL, f"animal_{animal_type}")
+    
     def get_tile_sprite(self, tile_char: str) -> pygame.Surface:
         """Get tile sprite based on tile character"""
         tile_mapping = {
@@ -147,6 +160,10 @@ class SpriteManager:
         for npc_type in ['default', 'farmer', 'merchant', 'wise_man']:
             self.get_npc_sprite(npc_type)
             
+        # Common animal types
+        for animal_type in ['cow', 'pig', 'chicken', 'sheep']:
+            self.get_animal_sprite(animal_type)
+            
         # Common tiles
         common_tiles = ['#', 'T', 'W', 'M', 'P', 'H', '.']
         for tile in common_tiles:
@@ -157,6 +174,7 @@ class SpriteManager:
         os.makedirs(os.path.join(self.sprites_dir, "player"), exist_ok=True)
         os.makedirs(os.path.join(self.sprites_dir, "npcs"), exist_ok=True)
         os.makedirs(os.path.join(self.sprites_dir, "tiles"), exist_ok=True)
+        os.makedirs(os.path.join(self.sprites_dir, "animals"), exist_ok=True)
         
         # Create simple sample sprites and save them
         # This creates actual PNG files that can be replaced with better artwork
@@ -176,6 +194,27 @@ class SpriteManager:
         for npc_type, color in npc_types.items():
             sprite = self._create_colored_sprite(color)
             path = os.path.join(self.sprites_dir, "npcs", f"npc_{npc_type}.png")
+            pygame.image.save(sprite, path)
+            
+        # Sample animal sprites
+        animal_types = {
+            'cow': ((0, 0, 0), (255, 255, 255)),      # Black with white spots
+            'pig': ((255, 192, 203), None),           # Pink
+            'chicken': ((255, 255, 255), (255, 140, 0)), # White with orange beak
+            'sheep': ((245, 245, 245), None),         # Off-white
+            'horse': ((139, 69, 19), None),           # Brown
+            'goat': ((255, 248, 220), None),          # Cream
+        }
+        
+        for animal_type, colors in animal_types.items():
+            if animal_type == 'cow':
+                sprite = self._create_cow_sprite()
+            elif animal_type == 'chicken':
+                sprite = self._create_chicken_sprite()
+            else:
+                accent_color = colors[1] if len(colors) > 1 else None
+                sprite = self._create_colored_sprite(colors[0], accent_color)
+            path = os.path.join(self.sprites_dir, "animals", f"animal_{animal_type}.png")
             pygame.image.save(sprite, path)
             
         # Sample tile sprites
@@ -247,6 +286,39 @@ class SpriteManager:
         trunk_x = (self.tile_size - trunk_size) // 2
         trunk_y = (self.tile_size - trunk_size) // 2
         pygame.draw.rect(sprite, (139, 69, 19), (trunk_x, trunk_y, trunk_size, trunk_size))
+        
+        # Add white border
+        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
+        
+        return sprite
+    
+    def _create_cow_sprite(self) -> pygame.Surface:
+        """Create a cow sprite with black base and white spots"""
+        sprite = pygame.Surface((self.tile_size, self.tile_size))
+        sprite.fill((0, 0, 0))  # Black base
+        
+        # Add white spots
+        spot_positions = [(8, 8), (20, 6), (6, 18), (22, 20), (14, 24)]
+        for spot_x, spot_y in spot_positions:
+            pygame.draw.circle(sprite, (255, 255, 255), (spot_x, spot_y), 3)
+        
+        # Add white border
+        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
+        
+        return sprite
+    
+    def _create_chicken_sprite(self) -> pygame.Surface:
+        """Create a chicken sprite with white base and orange beak"""
+        sprite = pygame.Surface((self.tile_size, self.tile_size))
+        sprite.fill((255, 255, 255))  # White base
+        
+        # Add orange beak
+        beak_points = [(24, 14), (28, 16), (24, 18)]
+        pygame.draw.polygon(sprite, (255, 140, 0), beak_points)
+        
+        # Add red comb on top
+        comb_points = [(14, 6), (16, 4), (18, 6)]
+        pygame.draw.polygon(sprite, (255, 0, 0), comb_points)
         
         # Add white border
         pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)

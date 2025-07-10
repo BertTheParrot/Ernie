@@ -40,6 +40,25 @@ def create_farming_section(world: List[List[str]], WORLD_WIDTH: int, WORLD_HEIGH
     
     # Village well - source of water
     world[20][20] = 'O'  # Well
+    
+    # Animal pastures - clear grass areas for animals to roam
+    # Cow pasture (around the barn)
+    for y in range(20, 24):
+        for x in range(22, 26):
+            if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
+                world[y][x] = '.'  # Clear grass for cows
+    
+    # Pig pen area
+    for y in range(24, 26):
+        for x in range(16, 19):
+            if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
+                world[y][x] = '.'  # Clear grass for pigs
+    
+    # Sheep field (separate area)
+    for y in range(18, 22):
+        for x in range(26, 30):
+            if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
+                world[y][x] = '.'  # Clear grass for sheep
 
 def get_farm_npcs():
     """Return NPCs specific to the farming area"""
@@ -78,13 +97,14 @@ def get_farm_npcs():
 
 # 🎨 Expansion Ideas for Brett:
 """
+Recent additions:
+✅ Animal pens with cows, pigs, chickens, and sheep - now implemented!
+
 Future additions you could make to this biome:
-- Animal pens with sheep/cows (new tile types 'P' for pen, 'A' for animals)
 - Windmill for grinding grain (tile 'W')
 - Market stalls for trading (tile 'M') 
 - Seasonal crop variations
 - Farm tools and equipment
-- Chicken coop with chickens
 - Vegetable gardens with different crops
 - Farm dog that follows you around
 - Scarecrow in the fields
@@ -93,4 +113,8 @@ Future additions you could make to this biome:
 - Storage silos
 - Compost piles
 - Orchard with fruit trees
+- Animal feeding mechanics
+- Milk/egg collection mini-games
+- Fencing around animal areas
+- Horse riding system
 """ 

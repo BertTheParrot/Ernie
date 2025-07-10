@@ -7,6 +7,7 @@ A 2D Python game built with Pygame where Ernie explores a village and talks to N
 - **2D top-down exploration** with smooth movement
 - **WASD controls** for movement
 - **NPC interactions** with dialogue system
+- **Living farm animals** that wander and can be interacted with
 - **Camera following** the player
 - **Sprite-based graphics** with customizable image files
 - **Multiple biomes** with diverse terrain and NPCs
@@ -197,6 +198,7 @@ python main.py
 
 - **Blue rectangle** - Ernie (the player)
 - **Green rectangles** - NPCs you can talk to
+- **Animal sprites** - Farm animals (cows, pigs, chickens, sheep) that wander around
 - **Gray tiles** - Walls (can't walk through)
 - **Brown tiles** - Trees (decorative)
 - **Green tiles** - Grass (walkable)
@@ -234,9 +236,24 @@ The game now uses a flexible sprite system instead of colored rectangles!
 
 See the **[Sprite Guide](SPRITE_GUIDE.md)** for detailed instructions on creating and using custom sprites.
 
+## 🐄 Farm Animals
+
+The farm biome now features living animals that wander around their pastures!
+
+- **🐄 Cows**: Slow-moving, near the barn - say "Moo!"
+- **🐷 Pigs**: Medium speed, in the pig pen - say "Oink!" 
+- **🐔 Chickens**: Fast-moving, around buildings - say "Cluck!"
+- **🐑 Sheep**: In their own field - say "Baa!"
+
+**How to interact**: Walk close to any animal and press SPACE to hear their sounds!
+
+See the **[Animals Guide](ANIMALS_GUIDE.md)** for complete details about animal behaviors and features.
+
 ## 🎯 Future Enhancements
 
 - Sound effects and background music
+- Animal feeding and care mechanics
+- Resource collection (milk, eggs)
 - More NPCs and dialogue options
 - Inventory system
 - Quests and objectives
