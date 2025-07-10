@@ -69,11 +69,36 @@ class SpriteManager:
     
     def _create_colored_sprite(self, color: Tuple[int, int, int], 
                               accent_color: Optional[Tuple[int, int, int]] = None) -> pygame.Surface:
-        """Create a simple colored rectangle sprite as fallback"""
+        """Create enhanced colored sprites with texture"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill(color)
         
-        # Add accent dot if specified (for directional indicators)
+        # Add gradient effect for better visual appeal
+        base_color = color
+        highlight_color = tuple(min(255, c + 30) for c in color)
+        shadow_color = tuple(max(0, c - 30) for c in color)
+        
+        # Fill with base color
+        sprite.fill(base_color)
+        
+        # Add simple texture based on color type
+        if color == (34, 139, 34):  # Grass
+            # Add grass texture
+            for i in range(0, self.tile_size, 4):
+                for j in range(0, self.tile_size, 4):
+                    if (i + j) % 8 == 0:
+                        pygame.draw.rect(sprite, highlight_color, (i, j, 2, 1))
+        elif color == (65, 105, 225):  # Water
+            # Add water ripples
+            for i in range(0, self.tile_size, 6):
+                pygame.draw.line(sprite, highlight_color, (0, i), (self.tile_size, i), 1)
+        elif color == (128, 128, 128):  # Stone/Wall
+            # Add stone texture
+            for i in range(4):
+                x = (i * 8) % self.tile_size
+                y = (i * 6) % self.tile_size
+                pygame.draw.rect(sprite, shadow_color, (x, y, 3, 3))
+        
+        # Add accent dot if specified
         if accent_color:
             center_x, center_y = self.tile_size // 2, self.tile_size // 2
             pygame.draw.circle(sprite, accent_color, (center_x, center_y), 4)
@@ -253,96 +278,245 @@ class SpriteManager:
             pygame.image.save(sprite, path)
     
     def _create_player_sprite(self, direction: str) -> pygame.Surface:
-        """Create a player sprite with directional indicator"""
+        """Create a detailed player character sprite"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((65, 105, 225))  # Blue
+        sprite.fill((34, 139, 34))  # Grass background
         
-        # Add directional indicator
-        center_x, center_y = self.tile_size // 2, self.tile_size // 2
-        if direction == 'up':
-            pygame.draw.circle(sprite, (255, 255, 0), (center_x, 8), 4)
-        elif direction == 'down':
-            pygame.draw.circle(sprite, (255, 255, 0), (center_x, self.tile_size - 8), 4)
-        elif direction == 'left':
-            pygame.draw.circle(sprite, (255, 255, 0), (8, center_y), 4)
+        # Character body (blue shirt)
+        body_color = (65, 105, 225)
+        head_color = (255, 220, 177)  # Skin tone
+        
+        # Head
+        pygame.draw.circle(sprite, head_color, (16, 10), 6)
+        
+        # Body
+        pygame.draw.rect(sprite, body_color, (11, 14, 10, 12))
+        
+        # Arms
+        pygame.draw.rect(sprite, body_color, (8, 16, 4, 8))
+        pygame.draw.rect(sprite, body_color, (20, 16, 4, 8))
+        
+        # Legs (brown pants)
+        leg_color = (101, 67, 33)
+        pygame.draw.rect(sprite, leg_color, (12, 26, 3, 6))
+        pygame.draw.rect(sprite, leg_color, (17, 26, 3, 6))
+        
+        # Eyes (black dots)
+        if direction == 'left':
+            pygame.draw.circle(sprite, (0, 0, 0), (13, 9), 1)
         elif direction == 'right':
-            pygame.draw.circle(sprite, (255, 255, 0), (self.tile_size - 8, center_y), 4)
+            pygame.draw.circle(sprite, (0, 0, 0), (19, 9), 1)
+        else:  # up/down
+            pygame.draw.circle(sprite, (0, 0, 0), (14, 9), 1)
+            pygame.draw.circle(sprite, (0, 0, 0), (18, 9), 1)
+        
+        # Directional indicator (hat/hair)
+        hat_color = (139, 69, 19)
+        if direction == 'up':
+            pygame.draw.rect(sprite, hat_color, (13, 4, 6, 3))
+        elif direction == 'down':
+            pygame.draw.rect(sprite, hat_color, (13, 6, 6, 3))
+        elif direction == 'left':
+            pygame.draw.rect(sprite, hat_color, (10, 5, 6, 3))
+        elif direction == 'right':
+            pygame.draw.rect(sprite, hat_color, (16, 5, 6, 3))
             
         return sprite
     
     def _create_tree_sprite(self) -> pygame.Surface:
-        """Create a tree sprite with trunk (matching original design)"""
+        """Create a detailed tree sprite that actually looks like a tree"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((0, 100, 0))  # Dark green background
+        sprite.fill((34, 139, 34))  # Grass green background
         
-        # Add brown trunk in center
-        trunk_size = 16
-        trunk_x = (self.tile_size - trunk_size) // 2
-        trunk_y = (self.tile_size - trunk_size) // 2
-        pygame.draw.rect(sprite, (139, 69, 19), (trunk_x, trunk_y, trunk_size, trunk_size))
+        # Draw brown trunk (thicker at bottom, thinner at top)
+        trunk_bottom_width = 8
+        trunk_top_width = 6
+        trunk_height = 20
+        trunk_x = (self.tile_size - trunk_bottom_width) // 2
+        trunk_y = self.tile_size - trunk_height
+        
+        # Draw trunk with slight taper
+        for i in range(trunk_height):
+            y = trunk_y + i
+            width = trunk_bottom_width - (i * (trunk_bottom_width - trunk_top_width) // trunk_height)
+            x = (self.tile_size - width) // 2
+            pygame.draw.rect(sprite, (101, 67, 33), (x, y, width, 1))
+        
+        # Draw tree foliage in layers (darker to lighter green)
+        center_x, center_y = self.tile_size // 2, 12
+        
+        # Dark green base layer (largest)
+        pygame.draw.circle(sprite, (0, 100, 0), (center_x, center_y), 12)
+        
+        # Medium green middle layer
+        pygame.draw.circle(sprite, (34, 139, 34), (center_x - 2, center_y - 2), 8)
+        
+        # Light green highlight layer
+        pygame.draw.circle(sprite, (50, 205, 50), (center_x - 3, center_y - 3), 5)
+        
+        # Add some texture with small dark spots
+        for spot_x, spot_y in [(center_x - 6, center_y + 2), (center_x + 4, center_y - 1), (center_x - 1, center_y + 4)]:
+            pygame.draw.circle(sprite, (0, 80, 0), (spot_x, spot_y), 1)
         
         return sprite
     
     def _create_cow_sprite(self) -> pygame.Surface:
-        """Create a cow sprite with black base and white spots"""
+        """Create a detailed cow sprite"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((0, 0, 0))  # Black base
+        sprite.fill((34, 139, 34))  # Grass background
         
-        # Add white spots
-        spot_positions = [(8, 8), (20, 6), (6, 18), (22, 20), (14, 24)]
-        for spot_x, spot_y in spot_positions:
-            pygame.draw.circle(sprite, (255, 255, 255), (spot_x, spot_y), 3)
+        # Cow body (white base)
+        body_color = (255, 255, 255)
+        pygame.draw.ellipse(sprite, body_color, (4, 10, 24, 16))
+        
+        # Cow head
+        pygame.draw.ellipse(sprite, body_color, (6, 6, 12, 10))
+        
+        # Black spots
+        spot_color = (0, 0, 0)
+        pygame.draw.ellipse(sprite, spot_color, (8, 12, 6, 4))
+        pygame.draw.ellipse(sprite, spot_color, (18, 14, 5, 3))
+        pygame.draw.ellipse(sprite, spot_color, (10, 20, 4, 3))
+        
+        # Legs (black)
+        pygame.draw.rect(sprite, spot_color, (8, 24, 2, 4))
+        pygame.draw.rect(sprite, spot_color, (12, 24, 2, 4))
+        pygame.draw.rect(sprite, spot_color, (18, 24, 2, 4))
+        pygame.draw.rect(sprite, spot_color, (22, 24, 2, 4))
+        
+        # Eyes
+        pygame.draw.circle(sprite, spot_color, (10, 9), 1)
+        pygame.draw.circle(sprite, spot_color, (14, 9), 1)
+        
+        # Nose/snout
+        pygame.draw.ellipse(sprite, (255, 192, 203), (10, 12, 4, 2))
         
         return sprite
     
     def _create_chicken_sprite(self) -> pygame.Surface:
-        """Create a chicken sprite with white base and orange beak"""
+        """Create a detailed chicken sprite"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((255, 255, 255))  # White base
+        sprite.fill((34, 139, 34))  # Grass background
         
-        # Add orange beak
-        beak_points = [(24, 14), (28, 16), (24, 18)]
+        # Chicken body (white)
+        body_color = (255, 255, 255)
+        pygame.draw.ellipse(sprite, body_color, (8, 12, 16, 12))
+        
+        # Chicken head
+        pygame.draw.circle(sprite, body_color, (12, 8), 5)
+        
+        # Beak (orange)
+        beak_points = [(7, 8), (4, 9), (7, 10)]
         pygame.draw.polygon(sprite, (255, 140, 0), beak_points)
         
-        # Add red comb on top
-        comb_points = [(14, 6), (16, 4), (18, 6)]
+        # Comb (red)
+        comb_points = [(10, 4), (12, 2), (14, 4)]
         pygame.draw.polygon(sprite, (255, 0, 0), comb_points)
+        
+        # Eye
+        pygame.draw.circle(sprite, (0, 0, 0), (11, 7), 1)
+        
+        # Tail feathers
+        tail_color = (245, 245, 245)
+        tail_points = [(22, 14), (28, 10), (26, 18)]
+        pygame.draw.polygon(sprite, tail_color, tail_points)
+        
+        # Legs (orange)
+        pygame.draw.rect(sprite, (255, 140, 0), (10, 22, 1, 4))
+        pygame.draw.rect(sprite, (255, 140, 0), (14, 22, 1, 4))
+        
+        # Wing detail
+        pygame.draw.arc(sprite, (220, 220, 220), (10, 14, 8, 6), 0, 3.14, 1)
         
         return sprite
     
     def _create_house_sprite(self) -> pygame.Surface:
-        """Create a house sprite with roof (matching original design)"""
+        """Create a detailed house sprite that looks like a real house"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((139, 69, 19))  # Brown base
+        sprite.fill((34, 139, 34))  # Grass background
         
-        # Add red roof triangle at top
-        roof_points = [
-            (0, 0),
-            (self.tile_size // 2, -8),
-            (self.tile_size, 0)
-        ]
-        pygame.draw.polygon(sprite, (255, 0, 0), roof_points)
+        # House walls (light brown/tan)
+        wall_color = (210, 180, 140)
+        wall_rect = (4, 12, 24, 16)
+        pygame.draw.rect(sprite, wall_color, wall_rect)
+        
+        # Roof (dark red, triangular)
+        roof_color = (139, 69, 19)
+        roof_points = [(2, 12), (16, 4), (30, 12)]
+        pygame.draw.polygon(sprite, roof_color, roof_points)
+        
+        # Door (dark brown)
+        door_color = (101, 67, 33)
+        door_rect = (13, 18, 6, 10)
+        pygame.draw.rect(sprite, door_color, door_rect)
+        
+        # Door handle (yellow)
+        pygame.draw.circle(sprite, (255, 215, 0), (17, 23), 1)
+        
+        # Windows (light blue with white frames)
+        window_frame = (255, 255, 255)
+        window_glass = (173, 216, 230)
+        
+        # Left window
+        pygame.draw.rect(sprite, window_frame, (7, 15, 5, 5))
+        pygame.draw.rect(sprite, window_glass, (8, 16, 3, 3))
+        
+        # Right window  
+        pygame.draw.rect(sprite, window_frame, (20, 15, 5, 5))
+        pygame.draw.rect(sprite, window_glass, (21, 16, 3, 3))
+        
+        # Chimney (dark gray)
+        pygame.draw.rect(sprite, (105, 105, 105), (22, 6, 4, 8))
         
         return sprite
     
     def _create_well_sprite(self) -> pygame.Surface:
-        """Create a well sprite with center hole (matching original design)"""
+        """Create a detailed well sprite"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((192, 192, 192))  # Light gray base
+        sprite.fill((34, 139, 34))  # Grass background
         
-        # Add dark blue center circle
-        center_x, center_y = self.tile_size // 2, self.tile_size // 2
-        pygame.draw.circle(sprite, (0, 0, 139), (center_x, center_y), 8)
+        # Well base (stone gray)
+        well_outer = (169, 169, 169)
+        pygame.draw.circle(sprite, well_outer, (16, 16), 12)
+        
+        # Well inner wall (darker gray)
+        pygame.draw.circle(sprite, (105, 105, 105), (16, 16), 10)
+        
+        # Water (dark blue)
+        pygame.draw.circle(sprite, (25, 25, 112), (16, 16), 7)
+        
+        # Water reflection (light blue)
+        pygame.draw.circle(sprite, (70, 130, 180), (14, 14), 2)
+        
+        # Well roof support posts (brown)
+        pygame.draw.rect(sprite, (101, 67, 33), (8, 4, 2, 12))
+        pygame.draw.rect(sprite, (101, 67, 33), (22, 4, 2, 12))
+        
+        # Well roof (dark brown)
+        roof_points = [(6, 4), (16, 0), (26, 4)]
+        pygame.draw.polygon(sprite, (139, 69, 19), roof_points)
         
         return sprite
     
     def _create_cave_sprite(self) -> pygame.Surface:
-        """Create a cave sprite with entrance (matching original design)"""
+        """Create a detailed cave entrance sprite"""
         sprite = pygame.Surface((self.tile_size, self.tile_size))
-        sprite.fill((0, 0, 0))  # Black base
+        sprite.fill((105, 105, 105))  # Gray rock background
         
-        # Add gray entrance circle
-        center_x, center_y = self.tile_size // 2, self.tile_size // 2
-        pygame.draw.circle(sprite, (128, 128, 128), (center_x, center_y), 12)
+        # Cave opening (black)
+        pygame.draw.ellipse(sprite, (0, 0, 0), (6, 8, 20, 16))
+        
+        # Rock texture around entrance (various grays)
+        rock_colors = [(169, 169, 169), (128, 128, 128), (105, 105, 105)]
+        
+        # Add rocky texture
+        for i in range(15):
+            x = (i * 7) % 28 + 2
+            y = (i * 11) % 28 + 2
+            color = rock_colors[i % 3]
+            pygame.draw.circle(sprite, color, (x, y), 2)
+        
+        # Darker shadows around cave entrance
+        pygame.draw.arc(sprite, (64, 64, 64), (5, 7, 22, 18), 0, 3.14159, 2)
         
         return sprite
