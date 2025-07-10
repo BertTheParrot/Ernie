@@ -5,6 +5,21 @@ import random
 import argparse
 from typing import List, Dict, Tuple, Optional
 
+# Import biome modules for collaborative development
+from biomes import (
+    create_farming_section, create_forest_section, create_lake_section,
+    create_mountain_section, create_crossroads_section, create_ruins_section,
+    create_southern_section, create_connecting_paths, create_random_features
+)
+from biomes.world_features import create_world_borders
+from biomes.farm_biome import get_farm_npcs
+from biomes.lake_biome import get_lake_npcs
+from biomes.forest_biome import get_forest_npcs
+from biomes.mountain_biome import get_mountain_npcs
+from biomes.crossroads_biome import get_crossroads_npcs
+from biomes.ruins_biome import get_ruins_npcs
+from biomes.southern_biome import get_southern_npcs
+
 # Initialize Pygame
 pygame.init()
 
@@ -223,7 +238,7 @@ class Game:
         self.keys = {}
         
     def create_world(self) -> List[List[str]]:
-        """Create a large, diverse world map with different biomes"""
+        """Create a large, diverse world map using modular biomes"""
         world = []
         
         # Initialize with grass
@@ -234,233 +249,53 @@ class Game:
             world.append(row)
         
         # Create border walls
-        for y in range(WORLD_HEIGHT):
-            for x in range(WORLD_WIDTH):
-                if x == 0 or x == WORLD_WIDTH-1 or y == 0 or y == WORLD_HEIGHT-1:
-                    world[y][x] = '#'
+        create_world_borders(world, WORLD_WIDTH, WORLD_HEIGHT)
         
-        # Create different biomes and features - now organized by sections
-        self._create_farming_section(world)      # Northwest - farm area
-        self._create_forest_section(world)       # North-central - forest
-        self._create_mountain_section(world)     # East - mountains
-        self._create_lake_section(world)         # Northeast - lake
-        self._create_crossroads_section(world)   # Center - main hub
-        self._create_ruins_section(world)        # Southwest - ancient ruins
-        self._create_southern_section(world)     # South - crafting village
-        self._create_connecting_paths(world)     # Roads between sections
-        self._create_random_features(world)      # Scattered elements
+        # Create different biomes using separate modules for collaboration
+        create_farming_section(world, WORLD_WIDTH, WORLD_HEIGHT)      # 🏠 Brett's area
+        create_lake_section(world, WORLD_WIDTH, WORLD_HEIGHT)         # 🏊 Girlfriend's area  
+        create_forest_section(world, WORLD_WIDTH, WORLD_HEIGHT)       # 🌲 Available
+        create_mountain_section(world, WORLD_WIDTH, WORLD_HEIGHT)     # 🏔️ Available
+        create_crossroads_section(world, WORLD_WIDTH, WORLD_HEIGHT)   # 🍺 Shared hub
+        create_ruins_section(world, WORLD_WIDTH, WORLD_HEIGHT)        # 🏺 Available
+        create_southern_section(world, WORLD_WIDTH, WORLD_HEIGHT)     # 🔨 Available
+        
+        # Connect everything with roads and features
+        create_connecting_paths(world, WORLD_WIDTH, WORLD_HEIGHT)     # Roads between sections
+        create_random_features(world, WORLD_WIDTH, WORLD_HEIGHT)      # Scattered elements
         
         return world
     
-    def _create_farming_section(self, world: List[List[str]]) -> None:
-        """Create the farming village section (Northwest)"""
-        # Farm fields
-        for y in range(15, 25):
-            for x in range(15, 35):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    if random.random() < 0.3:
-                        world[y][x] = 'C'  # Crops
-        
-        # Village clearing
-        for y in range(17, 24):
-            for x in range(17, 24):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    world[y][x] = '.'  # Clear grass
-        
-        # Farm buildings
-        farm_buildings = [(19, 19), (21, 19), (19, 22)]
-        for hx, hy in farm_buildings:
-            if 0 < hx < WORLD_WIDTH-1 and 0 < hy < WORLD_HEIGHT-1:
-                world[hy][hx] = 'H'  # House
-        
-        # Barn
-        world[21][22] = 'B'  # Barn
-        
-        # Well
-        world[20][20] = 'O'  # Well
-    
-    def _create_forest_section(self, world: List[List[str]]) -> None:
-        """Create the forest section (North-central)"""
-        # Large forest area
-        for y in range(5, 30):
-            for x in range(5, 45):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    if random.random() < 0.7:  # 70% chance for trees
-                        world[y][x] = 'T'
-                    elif random.random() < 0.2:
-                        world[y][x] = 'F'  # Dense forest
-        
-        # Forest clearing for hermit
-        for y in range(13, 18):
-            for x in range(13, 18):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    world[y][x] = '.'
-        
-        # Hermit's hut
-        world[15][15] = 'H'
-    
-    def _create_mountain_section(self, world: List[List[str]]) -> None:
-        """Create the mountain section (East)"""
-        # Mountain range
-        for y in range(10, 60):
-            for x in range(80, 95):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    if random.random() < 0.8:
-                        world[y][x] = 'M'  # Mountain
-                    elif random.random() < 0.3:
-                        world[y][x] = '#'  # Rock wall
-        
-        # Mountain pass
-        for y in range(28, 35):
-            for x in range(82, 88):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    world[y][x] = 'P'  # Path through mountains
-        
-        # Cave entrance
-        world[30][85] = 'E'  # Cave entrance
-    
-    def _create_lake_section(self, world: List[List[str]]) -> None:
-        """Create the lake section (Northeast)"""
-        # Main lake
-        lake_center_x, lake_center_y = 75, 25
-        for y in range(lake_center_y-8, lake_center_y+8):
-            for x in range(lake_center_x-10, lake_center_x+10):
-                distance = math.sqrt((x - lake_center_x)**2 + (y - lake_center_y)**2)
-                if distance < 8 and 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    world[y][x] = 'W'
-        
-        # Fishing dock
-        world[28][75] = 'D'  # Dock
-        world[29][75] = 'D'
-        
-        # Fisherman's shack
-        world[30][73] = 'H'
-    
-    def _create_crossroads_section(self, world: List[List[str]]) -> None:
-        """Create the crossroads section (Center)"""
-        # Tavern and buildings
-        tavern_area = [(60, 49), (61, 49), (60, 50), (61, 50)]  # 2x2 tavern
-        for tx, ty in tavern_area:
-            if 0 < tx < WORLD_WIDTH-1 and 0 < ty < WORLD_HEIGHT-1:
-                world[ty][tx] = 'T'  # Tavern (using T for now)
-        
-        # Inn
-        world[58][51] = 'H'
-        
-        # Stable
-        world[63][52] = 'S'
-    
-    def _create_ruins_section(self, world: List[List[str]]) -> None:
-        """Create the ancient ruins section (Southwest)"""
-        # Ruins pattern
-        ruins_center_x, ruins_center_y = 15, 55
-        for y in range(ruins_center_y-5, ruins_center_y+5):
-            for x in range(ruins_center_x-5, ruins_center_x+5):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    if random.random() < 0.6:
-                        world[y][x] = 'S'  # Stone ruins
-                    elif random.random() < 0.3:
-                        world[y][x] = '#'  # Broken walls
-        
-        # Central altar
-        world[55][15] = 'A'  # Altar
-    
-    def _create_southern_section(self, world: List[List[str]]) -> None:
-        """Create the southern village section"""
-        # Village clearing
-        for y in range(62, 68):
-            for x in range(28, 34):
-                if 0 < x < WORLD_WIDTH-1 and 0 < y < WORLD_HEIGHT-1:
-                    world[y][x] = '.'  # Clear grass
-        
-        # Village buildings
-        buildings = [(30, 64), (32, 64), (29, 66), (33, 66)]
-        for bx, by in buildings:
-            if 0 < bx < WORLD_WIDTH-1 and 0 < by < WORLD_HEIGHT-1:
-                world[by][bx] = 'H'
-        
-        # Blacksmith forge
-        world[65][30] = 'F'  # Forge
-    
-    def _create_connecting_paths(self, world: List[List[str]]) -> None:
-        """Create paths connecting all sections"""
-        # Main east-west road
-        for x in range(5, WORLD_WIDTH-5):
-            for offset in [-1, 0, 1]:  # 3-tile wide road
-                road_y = 40 + offset
-                if 0 < road_y < WORLD_HEIGHT-1 and world[road_y][x] not in ['W', 'M']:
-                    world[road_y][x] = 'P'
-        
-        # North-south connecting roads
-        # Farm to crossroads
-        for y in range(25, 40):
-            if world[y][25] not in ['W', 'M']:
-                world[y][25] = 'P'
-        
-        # Crossroads to southern village
-        for y in range(42, 62):
-            if world[y][30] not in ['W', 'M']:
-                world[y][30] = 'P'
-        
-        # Path to ruins
-        for x in range(15, 25):
-            if world[50][x] not in ['W', 'M']:
-                world[50][x] = 'P'
-    
-    def _create_random_features(self, world: List[List[str]]) -> None:
-        """Add random features throughout the world"""
-        # River system
-        river_x = 45
-        for y in range(1, WORLD_HEIGHT-1):
-            river_x += random.choice([-1, 0, 0, 1])
-            river_x = max(5, min(WORLD_WIDTH-5, river_x))
-            
-            for x in range(river_x-1, river_x+2):
-                if 0 < x < WORLD_WIDTH-1 and world[y][x] not in ['H', 'P']:
-                    world[y][x] = 'W'
-        
-        # Scattered trees and rocks
-        for _ in range(150):
-            x = random.randint(5, WORLD_WIDTH-5)
-            y = random.randint(5, WORLD_HEIGHT-5)
-            
-            if world[y][x] == '.':
-                feature = random.choice(['T', 'R', '.', '.', '.'])
-                if feature != '.':
-                    world[y][x] = feature
+
 
     def create_npcs(self) -> List[NPC]:
-        """Create NPCs scattered across the larger world"""
+        """Create NPCs from modular biome files"""
         npcs = []
         
-        # Village NPCs
-        farmer_joe = NPC(20*TILE_SIZE, 20*TILE_SIZE, "Farmer Joe", [
-            "Hello there, young adventurer!",
-            "Welcome to our little village.",
-            "I've been farming these lands for 30 years.",
-            "The path east leads to other settlements.",
-            "Be careful of the mountains to the east!"
-        ])
-        npcs.append(farmer_joe)
+        # Load NPCs from each biome module
+        biome_npc_functions = [
+            get_farm_npcs,
+            get_lake_npcs,
+            get_forest_npcs,
+            get_mountain_npcs,
+            get_crossroads_npcs,
+            get_ruins_npcs,
+            get_southern_npcs
+        ]
         
-        village_elder = NPC(21*TILE_SIZE, 22*TILE_SIZE, "Village Elder", [
-            "Greetings, traveler!",
-            "This village has stood here for generations.",
-            "The old ruins to the south hold many secrets.",
-            "Follow the main road to reach other towns."
-        ])
-        npcs.append(village_elder)
+        # Create NPCs from all biomes
+        for get_biome_npcs in biome_npc_functions:
+            biome_npcs = get_biome_npcs()
+            for npc_data in biome_npcs:
+                npc = NPC(
+                    npc_data['x'] * TILE_SIZE,
+                    npc_data['y'] * TILE_SIZE,
+                    npc_data['name'],
+                    npc_data['dialogue']
+                )
+                npcs.append(npc)
         
-        # Forest NPCs
-        forest_hermit = NPC(15*TILE_SIZE, 15*TILE_SIZE, "Forest Hermit", [
-            "Oh! A visitor in my peaceful forest!",
-            "I've lived among these trees for decades.",
-            "The forest spirits whisper of ancient magic.",
-            "Beware the deeper parts of the woods..."
-        ])
-        npcs.append(forest_hermit)
-        
-        # Traveler on the road
+        # Add traveling merchant on the road (shared NPC)
         traveling_merchant = NPC(50*TILE_SIZE, 40*TILE_SIZE, "Traveling Merchant", [
             "Well met, fellow traveler!",
             "The roads are safer with companions.",
@@ -468,59 +303,6 @@ class Game:
             "Have you seen the beautiful lake to the northeast?"
         ])
         npcs.append(traveling_merchant)
-        
-        # Lake area NPC
-        fisherman = NPC(75*TILE_SIZE, 28*TILE_SIZE, "Old Fisherman", [
-            "Perfect fishing weather today!",
-            "These waters are teeming with fish.",
-            "I've caught strange things in the deep parts...",
-            "The lake connects to underground rivers."
-        ])
-        npcs.append(fisherman)
-        
-        # Mountain area
-        mountain_guide = NPC(82*TILE_SIZE, 30*TILE_SIZE, "Mountain Guide", [
-            "The peaks are treacherous, friend!",
-            "Many caves lead deep into the mountains.",
-            "I once found gems in the eastern peaks.",
-            "Turn back if you're not prepared!"
-        ])
-        npcs.append(mountain_guide)
-        
-        # Second village
-        tavern_keeper = NPC(60*TILE_SIZE, 50*TILE_SIZE, "Tavern Keeper", [
-            "Welcome to the Crossroads Tavern!",
-            "Travelers from all lands stop here.",
-            "Have you heard the legends of the ruins?",
-            "Stay the night - the roads are dark!"
-        ])
-        npcs.append(tavern_keeper)
-        
-        # Ruins explorer
-        archaeologist = NPC(15*TILE_SIZE, 53*TILE_SIZE, "Archaeologist", [
-            "These ruins predate any known civilization!",
-            "I've been studying these stones for years.",
-            "The symbols suggest a lost magical culture.",
-            "Be careful not to disturb anything!"
-        ])
-        npcs.append(archaeologist)
-        
-        # Third village
-        blacksmith = NPC(30*TILE_SIZE, 65*TILE_SIZE, "Village Blacksmith", [
-            "The forge burns hot today!",
-            "I craft tools for all the local farmers.",
-            "The ore from the eastern mountains is finest.",
-            "Need anything repaired, traveler?"
-        ])
-        npcs.append(blacksmith)
-        
-        wise_woman = NPC(32*TILE_SIZE, 63*TILE_SIZE, "Wise Woman", [
-            "I sense great potential in you, young one.",
-            "The world is vast and full of mysteries.",
-            "Your journey has only just begun.",
-            "Trust in yourself and you'll find your way."
-        ])
-        npcs.append(wise_woman)
         
         return npcs
         
