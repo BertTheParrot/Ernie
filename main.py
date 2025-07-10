@@ -8,6 +8,9 @@ from typing import List, Dict, Tuple, Optional
 # Import sprite manager
 from sprite_manager import SpriteManager
 
+# Import sound manager
+from sound_manager import SoundManager
+
 # Import animals
 from animals import FarmAnimals
 
@@ -221,6 +224,9 @@ class Game:
         self.sprite_manager = SpriteManager()
         self.sprite_manager.preload_common_sprites()
         
+        # Create sound manager
+        self.sound_manager = SoundManager()
+        
         # Create world map
         self.world_map = self.create_world()
         
@@ -403,9 +409,9 @@ class Game:
                 return
         
         # Check animals if no NPC is nearby
-        animal_interaction = self.farm_animals.check_interactions(self.player.x, self.player.y, TILE_SIZE)
-        if animal_interaction:
-            prompt_text = f"Press SPACE to interact with {animal_interaction.split(':')[0]}"
+        animal_interaction_text, animal = self.farm_animals.check_interactions(self.player.x, self.player.y, TILE_SIZE)
+        if animal_interaction_text:
+            prompt_text = f"Press SPACE to interact with {animal_interaction_text.split(':')[0]}"
             prompt_surface = self.small_font.render(prompt_text, True, WHITE)
             prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT - 50))
             self.screen.blit(prompt_surface, prompt_rect)
@@ -426,11 +432,14 @@ class Game:
                 return
         
         # Then check animals if no NPC was interacted with
-        animal_interaction = self.farm_animals.check_interactions(self.player.x, self.player.y, TILE_SIZE)
-        if animal_interaction:
+        animal_interaction_text, animal = self.farm_animals.check_interactions(self.player.x, self.player.y, TILE_SIZE)
+        if animal_interaction_text:
             if not self.show_dialogue:
-                self.dialogue_text = animal_interaction
+                self.dialogue_text = animal_interaction_text
                 self.show_dialogue = True
+                # Play the animal sound!
+                if animal:
+                    animal.play_sound(self.sound_manager)
             else:
                 self.show_dialogue = False
                 
@@ -471,7 +480,7 @@ class Game:
         self.screen.blit(title_surface, (10, 10))
         
         # Controls
-        controls_text = self.small_font.render("WASD: Move | SPACE: Interact", True, WHITE)
+        controls_text = self.small_font.render("WASD: Move | SPACE: Interact | +/- Volume", True, WHITE)
         self.screen.blit(controls_text, (10, 40))
         
         # World coordinates
@@ -607,6 +616,16 @@ class Game:
                         self.handle_interaction()
                     elif event.key == pygame.K_ESCAPE:
                         self.show_dialogue = False
+                    elif event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
+                        # Increase volume
+                        current_volume = self.sound_manager.volume
+                        self.sound_manager.set_volume(min(1.0, current_volume + 0.1))
+                        print(f"🔊 Volume: {int(self.sound_manager.volume * 100)}%")
+                    elif event.key == pygame.K_MINUS:
+                        # Decrease volume
+                        current_volume = self.sound_manager.volume
+                        self.sound_manager.set_volume(max(0.0, current_volume - 0.1))
+                        print(f"🔉 Volume: {int(self.sound_manager.volume * 100)}%")
                         
             # Handle input
             self.handle_input()

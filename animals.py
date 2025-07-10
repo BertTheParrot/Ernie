@@ -166,6 +166,10 @@ class Animal:
     def get_interaction_text(self) -> str:
         """Get text for when player interacts with animal"""
         return random.choice(self.sounds)
+    
+    def play_sound(self, sound_manager) -> None:
+        """Play this animal's sound"""
+        sound_manager.play_animal_sound(self.animal_type)
 
 class FarmAnimals:
     """Manager class for all farm animals"""
@@ -219,10 +223,11 @@ class FarmAnimals:
         for animal in self.animals:
             animal.draw(screen, camera_x, camera_y)
     
-    def check_interactions(self, player_x: int, player_y: int, tile_size: int) -> str:
+    def check_interactions(self, player_x: int, player_y: int, tile_size: int) -> tuple:
         """Check if player is close enough to interact with any animal"""
         for animal in self.animals:
             distance = math.sqrt((player_x - animal.x)**2 + (player_y - animal.y)**2)
             if distance < tile_size * 1.5:  # Close enough to interact
-                return f"{animal.animal_type.title()}: {animal.get_interaction_text()}"
-        return "" 
+                interaction_text = f"{animal.animal_type.title()}: {animal.get_interaction_text()}"
+                return (interaction_text, animal)
+        return ("", None) 
