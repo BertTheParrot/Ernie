@@ -334,6 +334,32 @@ class Game:
             return "wise_man"
         else:
             return "default"
+    
+    def get_current_biome(self) -> str:
+        """Determine which biome the player is currently in based on their position"""
+        player_tile_x = self.player.x // TILE_SIZE
+        player_tile_y = self.player.y // TILE_SIZE
+        
+        # Define biome boundaries based on their general areas
+        # Note: Check farm first since it's more specific than forest
+        biome_areas = {
+            'farm': {'x_range': (15, 35), 'y_range': (15, 30)},  # Farm area (northwest)
+            'lake': {'x_range': (65, 85), 'y_range': (15, 35)},  # Lake area (northeast)
+            'mountain': {'x_range': (80, 95), 'y_range': (10, 50)},  # Mountain area (east)
+            'crossroads': {'x_range': (55, 70), 'y_range': (45, 55)},  # Crossroads (center)
+            'ruins': {'x_range': (10, 25), 'y_range': (50, 65)},  # Ruins (southwest)
+            'southern': {'x_range': (25, 35), 'y_range': (60, 70)},  # Southern village
+            'forest': {'x_range': (5, 50), 'y_range': (5, 40)},  # Forest (large area, checked last)
+        }
+        
+        # Check which biome the player is in
+        for biome_name, area in biome_areas.items():
+            if (area['x_range'][0] <= player_tile_x <= area['x_range'][1] and
+                area['y_range'][0] <= player_tile_y <= area['y_range'][1]):
+                return biome_name
+        
+        # Default to "wilderness" if not in any specific biome
+        return "wilderness"
         
     def handle_input(self) -> None:
         """Handle player input"""
@@ -452,6 +478,18 @@ class Game:
         world_y = self.player.y // TILE_SIZE
         pos_text = self.small_font.render(f"Location: ({world_x}, {world_y})", True, WHITE)
         self.screen.blit(pos_text, (10, 70))
+        
+        # Current biome
+        current_biome = self.get_current_biome()
+        if current_biome in WORLD_SECTIONS:
+            biome_name = WORLD_SECTIONS[current_biome]['name']
+            biome_color = CYAN  # Use cyan color to make it stand out
+        else:
+            biome_name = "Wilderness"
+            biome_color = LIGHT_GRAY
+        
+        biome_text = self.small_font.render(f"Biome: {biome_name}", True, biome_color)
+        self.screen.blit(biome_text, (10, 90))
         
         # Draw minimap
         self.draw_minimap()
