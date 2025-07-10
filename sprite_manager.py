@@ -73,9 +73,6 @@ class SpriteManager:
         sprite = pygame.Surface((self.tile_size, self.tile_size))
         sprite.fill(color)
         
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
-        
         # Add accent dot if specified (for directional indicators)
         if accent_color:
             center_x, center_y = self.tile_size // 2, self.tile_size // 2
@@ -260,9 +257,6 @@ class SpriteManager:
         sprite = pygame.Surface((self.tile_size, self.tile_size))
         sprite.fill((65, 105, 225))  # Blue
         
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
-        
         # Add directional indicator
         center_x, center_y = self.tile_size // 2, self.tile_size // 2
         if direction == 'up':
@@ -287,9 +281,6 @@ class SpriteManager:
         trunk_y = (self.tile_size - trunk_size) // 2
         pygame.draw.rect(sprite, (139, 69, 19), (trunk_x, trunk_y, trunk_size, trunk_size))
         
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
-        
         return sprite
     
     def _create_cow_sprite(self) -> pygame.Surface:
@@ -301,9 +292,6 @@ class SpriteManager:
         spot_positions = [(8, 8), (20, 6), (6, 18), (22, 20), (14, 24)]
         for spot_x, spot_y in spot_positions:
             pygame.draw.circle(sprite, (255, 255, 255), (spot_x, spot_y), 3)
-        
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
         
         return sprite
     
@@ -320,9 +308,6 @@ class SpriteManager:
         comb_points = [(14, 6), (16, 4), (18, 6)]
         pygame.draw.polygon(sprite, (255, 0, 0), comb_points)
         
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
-        
         return sprite
     
     def _create_house_sprite(self) -> pygame.Surface:
@@ -338,9 +323,6 @@ class SpriteManager:
         ]
         pygame.draw.polygon(sprite, (255, 0, 0), roof_points)
         
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
-        
         return sprite
     
     def _create_well_sprite(self) -> pygame.Surface:
@@ -351,9 +333,6 @@ class SpriteManager:
         # Add dark blue center circle
         center_x, center_y = self.tile_size // 2, self.tile_size // 2
         pygame.draw.circle(sprite, (0, 0, 139), (center_x, center_y), 8)
-        
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
         
         return sprite
     
@@ -366,7 +345,4 @@ class SpriteManager:
         center_x, center_y = self.tile_size // 2, self.tile_size // 2
         pygame.draw.circle(sprite, (128, 128, 128), (center_x, center_y), 12)
         
-        # Add white border
-        pygame.draw.rect(sprite, (255, 255, 255), sprite.get_rect(), 2)
-        
-        return sprite 
+        return sprite
