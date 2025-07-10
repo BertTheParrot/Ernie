@@ -17,8 +17,167 @@ A 2D Python game built with Pygame where Ernie explores a village and talks to N
 - Python 3.7 or higher
 - Pygame
 
-### Installation
+### Installation & Running Instructions
+
+#### Ubuntu/Debian Linux
+
+1. **Update package list and install Python:**
+   ```bash
+   sudo apt update
+   sudo apt install python3 python3-pip python3-venv
+   ```
+
+2. **Clone or download the game files:**
+   ```bash
+   # If using git
+   git clone <repository-url>
+   cd Ernie
+   
+   # Or navigate to your game directory
+   cd /path/to/Ernie
+   ```
+
+3. **Create and activate a virtual environment (recommended):**
+   ```bash
+   python3 -m venv ernie_env
+   source ernie_env/bin/activate
+   ```
+
+4. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Run the game:**
+   ```bash
+   python3 main.py
+   ```
+
+#### CentOS/RHEL/Fedora
+
+1. **Install Python and development tools:**
+   ```bash
+   # CentOS/RHEL
+   sudo yum install python3 python3-pip python3-devel
+   
+   # Fedora
+   sudo dnf install python3 python3-pip python3-devel
+   ```
+
+2. **Install SDL development libraries (required for Pygame):**
+   ```bash
+   # CentOS/RHEL
+   sudo yum install SDL2 SDL2-devel SDL2_image SDL2_image-devel
+   
+   # Fedora
+   sudo dnf install SDL2 SDL2-devel SDL2_image SDL2_image-devel
+   ```
+
+3. **Navigate to game directory:**
+   ```bash
+   cd /path/to/Ernie
+   ```
+
+4. **Create and activate virtual environment:**
+   ```bash
+   python3 -m venv ernie_env
+   source ernie_env/bin/activate
+   ```
+
+5. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+6. **Run the game:**
+   ```bash
+   python3 main.py
+   ```
+
+#### macOS
+
+1. **Install Python using Homebrew (recommended):**
+   ```bash
+   # Install Homebrew if not already installed
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   
+   # Install Python
+   brew install python
+   ```
+
+2. **Alternative: Download Python from python.org**
+   - Visit https://www.python.org/downloads/
+   - Download the latest Python 3.x for macOS
+   - Run the installer and follow the instructions
+
+3. **Navigate to game directory:**
+   ```bash
+   cd /path/to/Ernie
+   ```
+
+4. **Create and activate virtual environment:**
+   ```bash
+   python3 -m venv ernie_env
+   source ernie_env/bin/activate
+   ```
+
+5. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+6. **Run the game:**
+   ```bash
+   python3 main.py
+   ```
+
+### Troubleshooting
+
+#### Common Issues
+
+**Ubuntu/CentOS: "pygame module not found"**
 ```bash
+# Make sure you're in the virtual environment
+source ernie_env/bin/activate
+
+# Reinstall pygame
+pip uninstall pygame
+pip install pygame==2.5.2
+```
+
+**CentOS: SDL2 compilation errors**
+```bash
+# Install additional development libraries
+sudo yum groupinstall "Development Tools"
+sudo yum install gcc gcc-c++ make
+```
+
+**macOS: "pygame module not found"**
+```bash
+# Make sure you're in the virtual environment
+source ernie_env/bin/activate
+
+# Try installing with specific flags
+pip install pygame==2.5.2 --pre
+```
+
+**Display issues on Linux:**
+```bash
+# Set display environment variable
+export DISPLAY=:0
+
+# Or run with specific display
+python3 main.py --display :0
+```
+
+### Quick Start (All Platforms)
+
+If you have Python already installed:
+
+```bash
+# Navigate to game directory
+cd /path/to/Ernie
+
 # Install dependencies
 pip install -r requirements.txt
 
