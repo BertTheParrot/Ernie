@@ -8,7 +8,8 @@ A 2D Python game built with Pygame where Ernie explores a village and talks to N
 - **WASD controls** for movement
 - **NPC interactions** with dialogue system
 - **Camera following** the player
-- **Simple world map** with walls, trees, and grass
+- **Sprite-based graphics** with customizable image files
+- **Multiple biomes** with diverse terrain and NPCs
 - **Multiple NPCs** with unique dialogue
 
 ## 🚀 How to Run
@@ -222,15 +223,25 @@ python main.py
 - **60 FPS** - Smooth gameplay
 - **Collision detection** - Can't walk through walls
 
+## 🎨 Sprite System
+
+The game now uses a flexible sprite system instead of colored rectangles! 
+
+- **Custom Graphics**: Replace simple rectangles with your own artwork
+- **Easy Setup**: Just drop PNG files into the `sprites/` directory
+- **Automatic Fallbacks**: Game works even without custom sprites
+- **Multiple Types**: Player sprites, NPC sprites, and tile sprites
+
+See the **[Sprite Guide](SPRITE_GUIDE.md)** for detailed instructions on creating and using custom sprites.
+
 ## 🎯 Future Enhancements
 
-- Sprite-based graphics instead of rectangles
 - Sound effects and background music
 - More NPCs and dialogue options
 - Inventory system
 - Quests and objectives
 - Save/load functionality
-- Multiple areas to explore
+- Animated sprites
 
 ---
 

@@ -5,6 +5,9 @@ import random
 import argparse
 from typing import List, Dict, Tuple, Optional
 
+# Import sprite manager
+from sprite_manager import SpriteManager
+
 # Import biome modules for collaborative development
 from biomes import (
     create_farming_section, create_forest_section, create_lake_section,
@@ -97,7 +100,7 @@ SANDY = (238, 203, 173)
 PURPLE = (128, 0, 128)
 
 class Player:
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int, sprite_manager: SpriteManager):
         self.x = x
         self.y = y
         self.width = TILE_SIZE
@@ -105,6 +108,7 @@ class Player:
         self.speed = PLAYER_SPEED
         self.direction = 'down'
         self.is_moving = False
+        self.sprite_manager = sprite_manager
         
     def move(self, dx: int, dy: int, world_map: List[List[str]]) -> None:
         new_x = self.x + dx
@@ -145,22 +149,14 @@ class Player:
         screen_x = self.x - camera_x
         screen_y = self.y - camera_y
         
-        # Draw Ernie (blue rectangle)
-        pygame.draw.rect(screen, BLUE, (screen_x, screen_y, self.width, self.height))
-        pygame.draw.rect(screen, WHITE, (screen_x, screen_y, self.width, self.height), 2)
+        # Get the appropriate sprite for current direction
+        player_sprite = self.sprite_manager.get_player_sprite(self.direction)
         
-        # Draw direction indicator
-        if self.direction == 'up':
-            pygame.draw.circle(screen, YELLOW, (screen_x + self.width//2, screen_y + 8), 4)
-        elif self.direction == 'down':
-            pygame.draw.circle(screen, YELLOW, (screen_x + self.width//2, screen_y + self.height - 8), 4)
-        elif self.direction == 'left':
-            pygame.draw.circle(screen, YELLOW, (screen_x + 8, screen_y + self.height//2), 4)
-        elif self.direction == 'right':
-            pygame.draw.circle(screen, YELLOW, (screen_x + self.width - 8, screen_y + self.height//2), 4)
+        # Draw the player sprite
+        screen.blit(player_sprite, (screen_x, screen_y))
 
 class NPC:
-    def __init__(self, x: int, y: int, name: str, dialogue: List[str]):
+    def __init__(self, x: int, y: int, name: str, dialogue: List[str], sprite_manager: SpriteManager, npc_type: str = "default"):
         self.x = x
         self.y = y
         self.width = TILE_SIZE
@@ -169,14 +165,18 @@ class NPC:
         self.dialogue = dialogue
         self.current_dialogue = 0
         self.is_talking = False
+        self.sprite_manager = sprite_manager
+        self.npc_type = npc_type
         
     def draw(self, screen: pygame.Surface, camera_x: int, camera_y: int) -> None:
         screen_x = self.x - camera_x
         screen_y = self.y - camera_y
         
-        # Draw NPC (green rectangle)
-        pygame.draw.rect(screen, GREEN, (screen_x, screen_y, self.width, self.height))
-        pygame.draw.rect(screen, WHITE, (screen_x, screen_y, self.width, self.height), 2)
+        # Get the appropriate sprite for this NPC type
+        npc_sprite = self.sprite_manager.get_npc_sprite(self.npc_type)
+        
+        # Draw the NPC sprite
+        screen.blit(npc_sprite, (screen_x, screen_y))
         
         # Draw name above NPC
         font = pygame.font.Font(None, 20)
@@ -213,12 +213,16 @@ class Game:
         # Store spawn section
         self.spawn_section = spawn_section
         
+        # Create sprite manager
+        self.sprite_manager = SpriteManager()
+        self.sprite_manager.preload_common_sprites()
+        
         # Create world map
         self.world_map = self.create_world()
         
         # Create player at specified spawn point
         spawn_x, spawn_y = WORLD_SECTIONS[spawn_section]['spawn']
-        self.player = Player(spawn_x * TILE_SIZE + 16, spawn_y * TILE_SIZE + 16)
+        self.player = Player(spawn_x * TILE_SIZE + 16, spawn_y * TILE_SIZE + 16, self.sprite_manager)
         
         # Create NPCs
         self.npcs = self.create_npcs()
@@ -287,11 +291,15 @@ class Game:
         for get_biome_npcs in biome_npc_functions:
             biome_npcs = get_biome_npcs()
             for npc_data in biome_npcs:
+                # Determine NPC type based on name
+                npc_type = self._get_npc_type(npc_data['name'])
                 npc = NPC(
                     npc_data['x'] * TILE_SIZE,
                     npc_data['y'] * TILE_SIZE,
                     npc_data['name'],
-                    npc_data['dialogue']
+                    npc_data['dialogue'],
+                    self.sprite_manager,
+                    npc_type
                 )
                 npcs.append(npc)
         
@@ -301,10 +309,23 @@ class Game:
             "The roads are safer with companions.",
             "I trade goods between the villages.",
             "Have you seen the beautiful lake to the northeast?"
-        ])
+        ], self.sprite_manager, "merchant")
         npcs.append(traveling_merchant)
         
         return npcs
+        
+    def _get_npc_type(self, npc_name: str) -> str:
+        """Determine NPC sprite type based on name"""
+        name_lower = npc_name.lower()
+        
+        if "farmer" in name_lower or "joe" in name_lower:
+            return "farmer"
+        elif "merchant" in name_lower or "trader" in name_lower:
+            return "merchant"
+        elif "wise" in name_lower or "old" in name_lower or "elder" in name_lower:
+            return "wise_man"
+        else:
+            return "default"
         
     def handle_input(self) -> None:
         """Handle player input"""
@@ -380,56 +401,11 @@ class Game:
                 screen_x = x * TILE_SIZE - self.camera_x
                 screen_y = y * TILE_SIZE - self.camera_y
                 
-                # Draw different tile types
-                if tile == '#':  # Wall
-                    pygame.draw.rect(self.screen, GRAY, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'T':  # Tree
-                    pygame.draw.rect(self.screen, DARK_GREEN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.rect(self.screen, BROWN, (screen_x + 8, screen_y + 8, 16, 16))
-                elif tile == 'F':  # Dense forest
-                    pygame.draw.rect(self.screen, DARK_GREEN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'W':  # Water
-                    pygame.draw.rect(self.screen, BLUE, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'M':  # Mountain
-                    pygame.draw.rect(self.screen, GRAY, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.polygon(self.screen, LIGHT_GRAY, [
-                        (screen_x + TILE_SIZE//2, screen_y + 4),
-                        (screen_x + 4, screen_y + TILE_SIZE - 4),
-                        (screen_x + TILE_SIZE - 4, screen_y + TILE_SIZE - 4)
-                    ])
-                elif tile == 'P':  # Path
-                    pygame.draw.rect(self.screen, SANDY, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'H':  # House
-                    pygame.draw.rect(self.screen, BROWN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.polygon(self.screen, RED, [
-                        (screen_x, screen_y),
-                        (screen_x + TILE_SIZE//2, screen_y - 8),
-                        (screen_x + TILE_SIZE, screen_y)
-                    ])
-                elif tile == 'R':  # Rock
-                    pygame.draw.rect(self.screen, LIGHT_GRAY, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'S':  # Stone ruins
-                    pygame.draw.rect(self.screen, DARK_GRAY, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'C':  # Crops
-                    pygame.draw.rect(self.screen, YELLOW, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'B':  # Barn
-                    pygame.draw.rect(self.screen, DARK_BROWN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'O':  # Well
-                    pygame.draw.rect(self.screen, LIGHT_GRAY, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.circle(self.screen, DARK_BLUE, (screen_x + TILE_SIZE//2, screen_y + TILE_SIZE//2), 8)
-                elif tile == 'D':  # Dock
-                    pygame.draw.rect(self.screen, DARK_BROWN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                elif tile == 'E':  # Cave entrance
-                    pygame.draw.rect(self.screen, BLACK, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.circle(self.screen, GRAY, (screen_x + TILE_SIZE//2, screen_y + TILE_SIZE//2), 12)
-                elif tile == 'A':  # Altar
-                    pygame.draw.rect(self.screen, PURPLE, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                else:  # Grass
-                    pygame.draw.rect(self.screen, GREEN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE))
-                    
-                # Draw subtle grid lines for grass only
-                if tile == '.':
-                    pygame.draw.rect(self.screen, DARK_GREEN, (screen_x, screen_y, TILE_SIZE, TILE_SIZE), 1)
+                # Get the appropriate sprite for this tile
+                tile_sprite = self.sprite_manager.get_tile_sprite(tile)
+                
+                # Draw the tile sprite
+                self.screen.blit(tile_sprite, (screen_x, screen_y))
                     
     def draw_ui(self) -> None:
         """Draw UI elements with spawn section info"""
